@@ -40,6 +40,7 @@
 						</div>
 					</a>
 
+
 					<div class="name">PDF转图片</div>
 					<div class="job">
 						文档大小
@@ -73,8 +74,13 @@
 						<span class="value all small">少于20张效果较好</span>
 					</div>
 				</div>
+			<div class="number-page">
+				<input id="startPage" placeholder="开始页" />
+				<input id="endPage" placeholder="结束页" />
+			</div>
 			</div>
 		</div>
+		
 
 		<div id="imgDiv">
 		</div>
@@ -96,10 +102,10 @@
 					var mb;
 					if (fileSize) {
 						mb = fileSize / 1048576;
-						if (mb > 10) {
-							alert("文件大小不能>10M");
-							return;
-						}
+						// if (mb > 10) {
+						// 	alert("文件大小不能>10M");
+						// 	return;
+						// }
 					}
 
 					$("#export").removeAttr("disabled", "disabled");
@@ -173,11 +179,11 @@
 			}
 			//导出图片
 			$("#export").click(function() {
-				var zip = new JSZip();
+				var zip = new JSZip(), name = '';
 				if ($("#allInOnPicture").prop("checked")) { //导出为一张整图 
 					var height = 0,
 						context, mainCanvas, b = 2; //b：整图缩放倍数
-					var count = $("canvas").length;
+					
 					$("canvas").each(function(index, ele) {
 						var canvas = document.getElementById("pageNum" + (index + 1));
 						if (canvas) {
@@ -208,17 +214,32 @@
 
 				} else {
 					var images = zip.folder("images");
-					$("canvas").each(function(index, ele) {
-						var canvas = document.getElementById("pageNum" + (index + 1));
-						images.file("image-" + (index + 1) + ".png", dataURLtoBlob(canvas.toDataURL("image/png", 1.0)), {
-							base64: true
-						});
-					})
+					var count = $("canvas").length;
+					
+					let starts = document.getElementById('startPage').value,ends = document.getElementById("endPage").value
+					
+					if (ends && starts && ends <= count){
+						name = `${starts}-${ends}images.zip`
+						for(let index = starts - 1; index < ends; index++){
+							var canvas = document.getElementById("pageNum" + (index + 1));
+							images.file("image-" + (index + 1) + ".png", dataURLtoBlob(canvas.toDataURL("image/png", 1.0)), {
+								base64: true
+							});
+						}
+					}else{
+						$("canvas").each(function(index, ele) {
+							var canvas = document.getElementById("pageNum" + (index + 1));
+							images.file("image-" + (index + 1) + ".png", dataURLtoBlob(canvas.toDataURL("image/png", 1.0)), {
+								base64: true
+							});
+						})
+
+					}
 				}
 				zip.generateAsync({
 					type: "blob"
 				}).then(function(content) {
-					saveAs(content, "pdftoimages.zip");
+					saveAs(content, name || "pdftoimages.zip");
 				});
 			});
 		</script>
